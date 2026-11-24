@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dashboard">
+<style>
+  * { -webkit-box-sizing: border-box; box-sizing: border-box; -webkit-tap-highlight-color: rgba(0,0,0,0); }
+  html, body { height: 100%; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    color: #ececee;
+    background: #09090b;
+    background: -webkit-radial-gradient(50% 20%, 900px 600px, #16161b 0%, #0b0b0e 55%, #08080a 100%);
+    background: radial-gradient(900px 600px at 50% 20%, #16161b 0%, #0b0b0e 55%, #08080a 100%);
+    overflow: hidden;
+    display: -webkit-flex; display: flex;
+    -webkit-flex-direction: column; flex-direction: column;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  /* ---------- top bar ---------- */
+  header {
+    -webkit-flex: 0 0 auto; flex: 0 0 auto;
+    display: -webkit-flex; display: flex;
+    -webkit-justify-content: space-between; justify-content: space-between;
+    -webkit-align-items: flex-start; align-items: flex-start;
+    padding: 20px 24px 14px;
+  }
+  .time {
+    font-size: 66px; line-height: 1; font-weight: 200;
+    letter-spacing: 2px; color: #fafafa;
+  }
+  .time .colon { -webkit-animation: blink 2s step-start 0s infinite; animation: blink 2s step-start 0s infinite; }
+  @-webkit-keyframes blink { 50% { opacity: .25; } }
+  @keyframes blink { 50% { opacity: .25; } }
+  .date { margin-top: 8px; font-size: 16px; color: #8a8a93; letter-spacing: .4px; }
+
+  .weather {
+    position: relative;
+    text-align: right;
+    min-width: 170px;
+    cursor: pointer;
+  }
+  .w-row { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: flex-end; justify-content: flex-end; }
+  .w-icon { font-size: 40px; margin-right: 12px; }
+  .w-temp { font-size: 40px; font-weight: 300; color: #fafafa; }
+  .w-cond { font-size: 15px; color: #c7c7cf; margin-top: 4px; }
+  .w-sub  { font-size: 13px; color: #76767f; margin-top: 2px; }
+  .w-city { font-size: 13px; color: #e3b04b; margin-top: 2px; letter-spacing: .3px; }
+
+  .w-settings {
+    display: none;
+    text-align: left;
+    margin-top: 10px;
+    width: 250px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 12px;
+    padding: 12px;
+  }
+  .w-settings.open { display: block; }
+  .w-settings .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #76767f; margin: 2px 0 6px; }
+  .w-settings .pair { display: -webkit-flex; display: flex; }
+  .w-settings input { -webkit-flex: 1; flex: 1; min-width: 0; }
+  .w-settings .hr { height: 1px; background: rgba(255,255,255,.08); margin: 12px 0; }
+
+  /* ---------- panels ---------- */
+  main {
+    -webkit-flex: 1 1 auto; flex: 1 1 auto;
+    display: -webkit-flex; display: flex;
+    min-height: 0;
+    padding: 0 18px 18px;
+  }
+  .panel {
+    -webkit-flex: 1 1 0; flex: 1 1 0;
+    min-width: 0;
+    margin: 0 6px;
+    display: -webkit-flex; display: flex;
+    -webkit-flex-direction: column; flex-direction: column;
+    background: rgba(255,255,255,.028);
+    border: 1px solid rgba(255,255,255,.075);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .panel-head {
+    -webkit-flex: 0 0 auto; flex: 0 0 auto;
+    display: -webkit-flex; display: flex;
+    -webkit-justify-content: space-between; justify-content: space-between;
+    -webkit-align-items: center; align-items: center;
+    padding: 15px 16px 12px;
+    font-size: 12px; text-transform: uppercase; letter-spacing: 1.4px; color: #8a8a93;
+  }
+  .panel-body {
+    -webkit-flex: 1 1 auto; flex: 1 1 auto;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: 4px 14px 16px;
+  }
+
+  .btn {
+    font-family: inherit; font-size: 13px;
+    color: #e3b04b;
+    background: rgba(227,176,75,.10);
+    border: 1px solid rgba(227,176,75,.28);
+    border-radius: 9px;
+    padding: 7px 12px;
+    cursor: pointer;
+    -webkit-appearance: none; appearance: none;
+  }
+  .btn:active { background: rgba(227,176,75,.22); }
+  .btn.sm { padding: 5px 9px; font-size: 12px; }
+
+  input, textarea {
+    font-family: inherit; font-size: 16px; color: #ececee;
+    background: rgba(255,255,255,.045);
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: 9px;
+    padding: 9px 11px;
+    -webkit-appearance: none; appearance: none;
+    outline: none;
+  }
+  input::-webkit-input-placeholder, textarea::-webkit-input-placeholder { color: #6a6a72; }
+  input:focus, textarea:focus { border-color: rgba(227,176,75,.5); }
+
+  /* ---------- sticky notes ---------- */
+  .note {
+    position: relative;
+    margin: 6px 4px 16px;
+    padding: 14px 14px 10px;
+    border-radius: 3px;
+    color: #2b2a20;
+    box-shadow: 0 10px 22px rgba(0,0,0,.45);
+    min-height: 92px;
+  }
+  .note textarea {
+    width: 100%;
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: #2b2a20;
+    font-size: 15px; line-height: 1.4;
+    resize: none; overflow: hidden;
+    min-height: 60px;
+  }
+  .note textarea::-webkit-input-placeholder { color: rgba(43,42,32,.45); }
+  .note textarea:focus { border: none; }
+  .note .x {
+    position: absolute; top: 4px; right: 8px;
+    font-size: 17px; color: rgba(43,42,32,.4);
+    cursor: pointer; line-height: 1; padding: 2px 4px;
+  }
+
+  /* ---------- to-do ---------- */
+  .todo-add { display: -webkit-flex; display: flex; padding: 0 14px 10px; }
+  .todo-add input { -webkit-flex: 1; flex: 1; min-width: 0; margin-right: 8px; }
+  .todo {
+    display: -webkit-flex; display: flex;
+    -webkit-align-items: flex-start; align-items: flex-start;
+    padding: 9px 4px;
+    border-bottom: 1px solid rgba(255,255,255,.055);
+  }
+  .todo .box {
+    -webkit-flex: 0 0 auto; flex: 0 0 auto;
+    width: 20px; height: 20px; margin: 1px 11px 0 0;
+    border: 2px solid #6b6b74; border-radius: 6px;
+    cursor: pointer; position: relative;
+  }
+  .todo.done .box { background: #e3b04b; border-color: #e3b04b; }
+  .todo.done .box:after {
+    content: ""; position: absolute; left: 5px; top: 1px;
+    width: 5px; height: 10px;
+    border: solid #1a1a14; border-width: 0 2px 2px 0;
+    -webkit-transform: rotate(45deg); transform: rotate(45deg);
+  }
+  .todo .txt { -webkit-flex: 1; flex: 1; font-size: 15px; line-height: 1.35; color: #e4e4e8; }
+  .todo.done .txt { color: #6a6a72; text-decoration: line-through; }
+  .todo .x { color: #5c5c64; cursor: pointer; padding: 0 4px; font-size: 16px; }
+
+  /* ---------- journal ---------- */
+  .j-add { padding: 0 14px 10px; }
+  .j-add input { width: 100%; margin-bottom: 8px; }
+  .j-add textarea { width: 100%; min-height: 54px; resize: none; margin-bottom: 8px; line-height: 1.4; }
+  .j-add .btn { width: 100%; }
+  .entry { padding: 11px 2px; border-bottom: 1px solid rgba(255,255,255,.055); }
+  .entry .meta { display: -webkit-flex; display: flex; -webkit-align-items: baseline; align-items: baseline; margin-bottom: 4px; }
+  .entry .proj { font-size: 13px; color: #e3b04b; font-weight: 600; -webkit-flex: 1; flex: 1; }
+  .entry .ts { font-size: 11px; color: #6a6a72; letter-spacing: .3px; }
+  .entry .x { color: #5c5c64; cursor: pointer; padding: 0 2px 0 8px; font-size: 14px; }
+  .entry .body { font-size: 14px; line-height: 1.45; color: #d6d6db; white-space: pre-wrap; }
+
+  .empty { color: #5a5a62; font-size: 13px; padding: 14px 4px; font-style: italic; }
+
+  ::-webkit-scrollbar { width: 7px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <div class="time"><span id="hh">00</span><span class="colon">:</span><span id="mm">00</span></div>
+      <div class="date" id="date">&mdash;</div>
+    </div>
+
+    <div class="weather" id="weatherCard">
+      <div class="w-row">
+        <span class="w-icon" id="wIcon">&middot;&middot;</span>
+        <span class="w-temp" id="wTemp">&mdash;</span>
+      </div>
+      <div class="w-cond" id="wCond">tap to set weather</div>
+      <div class="w-sub" id="wSub"></div>
+      <div class="w-city" id="wCity"></div>
+
+      <div class="w-settings" id="wSettings">
+        <div class="lbl">Live weather</div>
+        <div class="pair">
+          <input id="cityInput" placeholder="City" style="margin-right:8px">
+          <button class="btn sm" id="cityGo">Get</button>
+        </div>
+        <div class="hr"></div>
+        <div class="lbl">Or set manually</div>
+        <div class="pair" style="margin-bottom:8px">
+          <input id="mTemp" placeholder="Temp e.g. 7" style="margin-right:8px">
+          <input id="mCond" placeholder="e.g. Cloudy">
+        </div>
+        <button class="btn sm" id="mSave" style="margin-right:8px">Save</button>
+        <button class="btn sm" id="wClose">Done</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- NOTES -->
+    <section class="panel">
+      <div class="panel-head"><span>Notes</span><button class="btn sm" id="addNote">+ Note</button></div>
+      <div class="panel-body" id="notes"></div>
+    </section>
+
+    <!-- TO-DO -->
+    <section class="panel">
+      <div class="panel-head"><span>To-Do</span><span id="todoCount" style="color:#5a5a62"></span></div>
+      <div class="todo-add">
+        <input id="todoInput" placeholder="Add a task&hellip;">
+        <button class="btn" id="addTodo">Add</button>
+      </div>
+      <div class="panel-body" id="todos"></div>
+    </section>
+
+    <!-- JOURNAL -->
+    <section class="panel">
+      <div class="panel-head"><span>Project Log</span></div>
+      <div class="j-add">
+        <input id="jProject" placeholder="Project&hellip;">
+        <textarea id="jBody" placeholder="What did you work on?"></textarea>
+        <button class="btn" id="addJournal">Log entry</button>
+      </div>
+      <div class="panel-body" id="journal"></div>
+    </section>
+  </main>
+
+<script>
+(function(){
+  "use strict";
+
+  function $(id){ return document.getElementById(id); }
+  function load(k, fb){ try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : fb; } catch(e){ return fb; } }
+  function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+  function uid(){ return Date.now().toString(36) + Math.floor(Math.random()*1000000).toString(36); }
+  function pad(n){ return (n < 10 ? "0" : "") + n; }
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+  var WD = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  var MO = ["January","February","March","April","May","June","July","August",
+            "September","October","November","December"];
+
+  /* ================= CLOCK ================= */
+  function tickClock(){
+    var d = new Date();
+    $("hh").innerHTML = pad(d.getHours());
+    $("mm").innerHTML = pad(d.getMinutes());
+    $("date").innerHTML = WD[d.getDay()] + ", " + d.getDate() + " " + MO[d.getMonth()];
+  }
+  tickClock();
+  setInterval(tickClock, 1000 * 15);
+
+  /* ================= WEATHER ================= */
+  var WCODE = {
+    0:["☀️","Clear"], 1:["🌤️","Mainly clear"],
+    2:["⛅","Partly cloudy"], 3:["☁️","Overcast"],
+    45:["🌫️","Fog"], 48:["🌫️","Rime fog"],
+    51:["🌦️","Light drizzle"], 53:["🌦️","Drizzle"], 55:["🌦️","Dense drizzle"],
+    56:["🌧️","Freezing drizzle"], 57:["🌧️","Freezing drizzle"],
+    61:["🌧️","Light rain"], 63:["🌧️","Rain"], 65:["🌧️","Heavy rain"],
+    66:["🌧️","Freezing rain"], 67:["🌧️","Freezing rain"],
+    71:["🌨️","Light snow"], 73:["🌨️","Snow"], 75:["🌨️","Heavy snow"],
+    77:["🌨️","Snow grains"],
+    80:["🌦️","Light showers"], 81:["🌦️","Showers"], 82:["⛈️","Heavy showers"],
+    85:["🌨️","Snow showers"], 86:["🌨️","Snow showers"],
+    95:["⛈️","Thunderstorm"], 96:["⛈️","Thunderstorm"], 99:["⛈️","Thunderstorm"]
+  };
+  function wmap(c){ return WCODE[c] || ["🌡️",""]; }
+
+  function xhrGet(url, ok, err){
+    try {
+      var x = new XMLHttpRequest();
+      x.open("GET", url, true);
+      x.onreadystatechange = function(){
+        if (x.readyState === 4){
+          if (x.status >= 200 && x.status < 300){
+            try { ok(JSON.parse(x.responseText)); } catch(e){ err && err(); }
+          } else { err && err(); }
+        }
+      };
+      x.onerror = function(){ err && err(); };
+      x.send();
+    } catch(e){ err && err(); }
+  }
+
+  function showWeather(w){
+    $("wIcon").innerHTML = w.emoji || "🌡️";
+    $("wTemp").innerHTML = (w.temp === "" || w.temp == null) ? "&mdash;" : (w.temp + "°");
+    $("wCond").innerHTML = w.cond ? esc(w.cond) : "";
+    $("wSub").innerHTML  = w.sub ? esc(w.sub) : "";
+    $("wCity").innerHTML = w.city ? esc(w.city) : "";
+  }
+
+  function fetchLive(city){
+    $("wCond").innerHTML = "Loading…";
+    var gurl = "https://geocoding-api.open-meteo.com/v1/search?count=1&language=en&name=" + encodeURIComponent(city);
+    xhrGet(gurl, function(g){
+      if (!g.results || !g.results.length){ $("wCond").innerHTML = "City not found"; return; }
+      var r = g.results[0];
+      var name = r.name + (r.country_code ? ", " + r.country_code : "");
+      var furl = "https://api.open-meteo.com/v1/forecast?timezone=auto&forecast_days=1"
+               + "&current=temperature_2m,weather_code"
+               + "&daily=temperature_2m_max,temperature_2m_min"
+               + "&latitude=" + r.latitude + "&longitude=" + r.longitude;
+      xhrGet(furl, function(f){
+        var cur = f.current || {};
+        var day = f.daily || {};
+        var m = wmap(cur.weather_code);
+        var w = {
+          emoji: m[0],
+          temp: Math.round(cur.temperature_2m),
+          cond: m[1],
+          sub: (day.temperature_2m_max ? "H " + Math.round(day.temperature_2m_max[0]) + "°   L " + Math.round(day.temperature_2m_min[0]) + "°" : ""),
+          city: name
+        };
+        save("dash.wcache", w);
+        showWeather(w);
+      }, function(){ liveFailed(); });
+    }, function(){ liveFailed(); });
+  }
+
+  function liveFailed(){
+    var cache = load("dash.wcache", null);
+    if (cache){ showWeather(cache); $("wSub").innerHTML = (cache.sub || "") ; }
+    else {
+      var man = load("dash.wmanual", null);
+      if (man){ showWeather(man); }
+      else { $("wCond").innerHTML = "Tap to set weather"; }
+    }
+  }
+
+  function initWeather(){
+    var city = load("dash.city", "Düsseldorf");
+    $("cityInput").value = city;
+    var man = load("dash.wmanual", null);
+    if (man){ showWeather(man); }
+    fetchLive(city);
+  }
+
+  $("weatherCard").addEventListener("click", function(e){
+    // open settings unless a control inside was tapped
+    var t = e.target;
+    if (t.id === "cityInput" || t.id === "mTemp" || t.id === "mCond") return;
+    if (t.className && String(t.className).indexOf("btn") > -1) return;
+    $("wSettings").className = "w-settings open";
+  });
+  $("wClose").addEventListener("click", function(){ $("wSettings").className = "w-settings"; });
+  $("cityGo").addEventListener("click", function(){
+    var c = $("cityInput").value.replace(/^\s+|\s+$/g,"");
+    if (!c) return;
+    save("dash.city", c);
+    $("wSettings").className = "w-settings";
+    fetchLive(c);
+  });
+  $("mSave").addEventListener("click", function(){
+    var t = $("mTemp").value.replace(/^\s+|\s+$/g,"");
+    var cd = $("mCond").value.replace(/^\s+|\s+$/g,"");
+    var w = { emoji: "🌡️", temp: (t === "" ? "" : t), cond: cd, sub: "", city: load("dash.city","Düsseldorf") };
+    save("dash.wmanual", w);
+    showWeather(w);
+    $("mTemp").value = ""; $("mCond").value = "";
+    $("wSettings").className = "w-settings";
+  });
+
+  /* ================= NOTES ================= */
+  var NOTE_COLORS = ["#f6e27a","#f7b7c6","#bfe6b0","#a6d8f0","#e9c7f2","#f5c99b"];
+  var notes = load("dash.notes", []);
+
+  function autoGrow(el){ el.style.height = "auto"; el.style.height = (el.scrollHeight) + "px"; }
+
+  function renderNotes(){
+    var box = $("notes"); box.innerHTML = "";
+    if (!notes.length){ box.innerHTML = '<div class="empty">No notes yet. Tap + Note.</div>'; return; }
+    for (var i = 0; i < notes.length; i++){
+      (function(n){
+        var div = document.createElement("div");
+        div.className = "note";
+        div.style.background = n.color;
+        div.style.webkitTransform = "rotate(" + n.rot + "deg)";
+        div.style.transform = "rotate(" + n.rot + "deg)";
+        var x = document.createElement("span");
+        x.className = "x"; x.innerHTML = "×";
+        x.onclick = function(){
+          for (var k = 0; k < notes.length; k++){ if (notes[k].id === n.id){ notes.splice(k,1); break; } }
+          save("dash.notes", notes); renderNotes();
+        };
+        var ta = document.createElement("textarea");
+        ta.value = n.text; ta.placeholder = "Write…";
+        ta.oninput = function(){
+          n.text = ta.value; save("dash.notes", notes); autoGrow(ta);
+        };
+        div.appendChild(x); div.appendChild(ta);
+        box.appendChild(div);
+        autoGrow(ta);
+      })(notes[i]);
+    }
+  }
+  $("addNote").addEventListener("click", function(){
+    var rot = (Math.random() * 5 - 2.5);
+    notes.push({ id: uid(), text: "", color: NOTE_COLORS[notes.length % NOTE_COLORS.length], rot: Math.round(rot*10)/10 });
+    save("dash.notes", notes); renderNotes();
+    var tas = $("notes").getElementsByTagName("textarea");
+    if (tas.length) tas[tas.length-1].focus();
+  });
+  renderNotes();
+
+  /* ================= TO-DO ================= */
+  var todos = load("dash.todos", []);
+  function renderTodos(){
+    var box = $("todos"); box.innerHTML = "";
+    var open = 0;
+    for (var i = 0; i < todos.length; i++){ if (!todos[i].done) open++; }
+    $("todoCount").innerHTML = todos.length ? (open + " left") : "";
+    if (!todos.length){ box.innerHTML = '<div class="empty">Nothing to do. Add a task above.</div>'; return; }
+    for (var j = 0; j < todos.length; j++){
+      (function(t){
+        var row = document.createElement("div");
+        row.className = "todo" + (t.done ? " done" : "");
+        var box2 = document.createElement("span"); box2.className = "box";
+        box2.onclick = function(){ t.done = !t.done; save("dash.todos", todos); renderTodos(); };
+        var txt = document.createElement("span"); txt.className = "txt"; txt.innerHTML = esc(t.text);
+        var x = document.createElement("span"); x.className = "x"; x.innerHTML = "×";
+        x.onclick = function(){
+          for (var k = 0; k < todos.length; k++){ if (todos[k].id === t.id){ todos.splice(k,1); break; } }
+          save("dash.todos", todos); renderTodos();
+        };
+        row.appendChild(box2); row.appendChild(txt); row.appendChild(x);
+        box.appendChild(row);
+      })(todos[j]);
+    }
+  }
+  function addTodo(){
+    var v = $("todoInput").value.replace(/^\s+|\s+$/g,"");
+    if (!v) return;
+    todos.unshift({ id: uid(), text: v, done: false });
+    save("dash.todos", todos); $("todoInput").value = ""; renderTodos();
+  }
+  $("addTodo").addEventListener("click", addTodo);
+  $("todoInput").addEventListener("keydown", function(e){ if (e.keyCode === 13) addTodo(); });
+  renderTodos();
+
+  /* ================= JOURNAL ================= */
+  var journal = load("dash.journal", []);
+  function stamp(ts){
+    var d = new Date(ts);
+    return d.getDate() + " " + MO[d.getMonth()].slice(0,3) + " · " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+  function renderJournal(){
+    var box = $("journal"); box.innerHTML = "";
+    if (!journal.length){ box.innerHTML = '<div class="empty">No entries yet. Log your first one.</div>'; return; }
+    for (var i = 0; i < journal.length; i++){
+      (function(en){
+        var div = document.createElement("div"); div.className = "entry";
+        var meta = document.createElement("div"); meta.className = "meta";
+        var proj = document.createElement("span"); proj.className = "proj"; proj.innerHTML = en.project ? esc(en.project) : "Log";
+        var ts = document.createElement("span"); ts.className = "ts"; ts.innerHTML = stamp(en.ts);
+        var x = document.createElement("span"); x.className = "x"; x.innerHTML = "×";
+        x.onclick = function(){
+          for (var k = 0; k < journal.length; k++){ if (journal[k].id === en.id){ journal.splice(k,1); break; } }
+          save("dash.journal", journal); renderJournal();
+        };
+        meta.appendChild(proj); meta.appendChild(ts); meta.appendChild(x);
+        var body = document.createElement("div"); body.className = "body"; body.innerHTML = esc(en.body);
+        div.appendChild(meta); div.appendChild(body);
+        box.appendChild(div);
+      })(journal[i]);
+    }
+  }
+  $("addJournal").addEventListener("click", function(){
+    var p = $("jProject").value.replace(/^\s+|\s+$/g,"");
+    var b = $("jBody").value.replace(/^\s+|\s+$/g,"");
+    if (!b && !p) return;
+    journal.unshift({ id: uid(), ts: Date.now(), project: p, body: b });
+    save("dash.journal", journal);
+    $("jBody").value = "";
+    renderJournal();
+  });
+  renderJournal();
+
+  /* ================= GO ================= */
+  initWeather();
+})();
+</script>
+</body>
+</html>
